@@ -38,7 +38,7 @@ public class ProxyInterceptor implements HandlerInterceptor {
             var proxyResponse = restTemplate.exchange(
                     new URI(proxyTarget.toString().concat(request.getServletPath())),
                     HttpMethod.valueOf(request.getMethod()),
-                    null,
+                    null, //TODO for post, put, etc
                     String.class
             );
 
@@ -53,7 +53,6 @@ public class ProxyInterceptor implements HandlerInterceptor {
             if (proxyResponseBody != null) {
                 response.getWriter().write(proxyResponseBody);
             }
-
             return false;
         }
         return true;
