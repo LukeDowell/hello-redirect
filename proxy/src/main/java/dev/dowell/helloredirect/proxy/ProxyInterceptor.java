@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -21,17 +22,27 @@ public class ProxyInterceptor implements HandlerInterceptor {
 
     private final RestTemplate restTemplate;
     private final URL proxyTarget;
+    private final List<RequestParityHandler> handlers;
 
     public ProxyInterceptor(RestTemplate restTemplate,
-                            String proxyTarget) throws MalformedURLException {
+                            String proxyTarget,
+                            List<RequestParityHandler> handlers) throws MalformedURLException {
         this.restTemplate = restTemplate;
         this.proxyTarget = new URL(proxyTarget);
+        this.handlers = handlers;
     }
 
     @Override
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
                              Object handler) throws IOException, URISyntaxException {
+
+        handlers.forEach((parityHandler) -> {
+            if (parityHandler.shouldHandle(request)) {
+                return parityHandler.handleRequest(request, response, handler);
+            }
+        });
+
         if (request.getServletPath().contains("/legacy/")) {
             log.info("Proxying request to legacy service...");
             var maybeBody = request.getReader().lines();
